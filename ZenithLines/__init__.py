@@ -3,16 +3,42 @@ from flask_sqlalchemy import SQLAlchemy
 import email_validator 
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
-app = Flask(__name__)
-app.app_context().push()
+from flask_mail import Mail
+import os
+from ZenithLines.config import Config
 
-app.config['SECRET_KEY'] = '170632579391ac903fa5a1402d826121'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 
-db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
-login_manager = LoginManager(app)
-login_manager.login_view='login'
+
+
+
+
+db = SQLAlchemy()
+bcrypt = Bcrypt()
+login_manager = LoginManager()
+login_manager.login_view='users.login'
 login_manager.login_message_category='info'
 
-from ZenithLines import routes
+mail=Mail()
+
+
+
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.app_context().push()
+    app.config.from_object(Config)
+
+    db.init_app(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
+    mail.init_app(app)
+
+    from ZenithLines.users.routes import users
+    from ZenithLines.posts.routes import posts
+    from ZenithLines.main.routes import main
+
+    app.register_blueprint(users)
+    app.register_blueprint(posts)
+    app.register_blueprint(main)
+
+    return app
